@@ -1,0 +1,59 @@
+name: Deploy Hugo to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with PaperMod submodule
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Hugo Extended
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: latest
+          extended: true
+
+      - name: Build
+        working-directory: hugo
+        run: hugo --minify
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync static assets (1-year cache)
+        run: |
+          aws s3 sync hugo/public/ s3://${{ secrets.S3_BUCKET }}/ \
+            --delete \
+            --cache-control "max-age=31536000,public" \
+            --exclude "*.html" \
+            --exclude "*.xml" \
+            --exclude "*.json"
+
+      - name: Sync HTML/XML/JSON (5-min cache)
+        run: |
+          aws s3 sync hugo/public/ s3://${{ secrets.S3_BUCKET }}/ \
+            --cache-control "max-age=300,public" \
+            --include "*.html" \
+            --include "*.xml" \
+            --include "*.json"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
