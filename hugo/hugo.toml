@@ -1,0 +1,44 @@
+baseURL = 'https://opscode.io/'
+languageCode = 'en-us'
+title = 'Opscode'
+theme = 'PaperMod'
+paginate = 10
+
+[params]
+  env = "production"
+  title = "opscode"
+  description = "A tech blog by Malcolm"
+  author = "Malcolm Frazier"
+  defaultTheme = "auto"
+  ShowReadingTime = true
+  ShowCodeCopyButtons = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowRssButtonInSectionTermList = true
+  UseHugoToc = true
+
+  [params.homeInfoParams]
+    Title = "Hi, I'm Malcolm"
+    Content = "Systems engineer writing about Linux, DevOps, automation, security, and infrastructure."
+
+  [[params.socialIcons]]
+    name = "github"
+    url  = "https://github.com/mfrazier"
+
+[menu]
+  [[menu.main]]
+    identifier = "posts"
+    name = "Posts"
+    url = "/posts/"
+    weight = 10
+  [[menu.main]]
+    identifier = "tags"
+    name = "Tags"
+    url = "/tags/"
+    weight = 20
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[markup.highlight]
+  noClasses = false
