@@ -57,8 +57,6 @@ administration, automation, and home lab projects.
 - Hugo site content and configuration live in `hugo/`
 - Deployment is fully automated via GitHub Actions on every push to `main`
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ### Built With
 
 * [![Terraform][Terraform]][Terraform-url]
@@ -66,8 +64,6 @@ administration, automation, and home lab projects.
 * [![Hugo][Hugo]][Hugo-url]
 * [![AWS][AWS]][AWS-url]
 * [![GitHub Actions][GHActions]][GHActions-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
@@ -77,8 +73,6 @@ administration, automation, and home lab projects.
 
 Development is done on macOS. Hugo is required to build the static site and Terraform is
 managed via tfenv, which handles version pinning similarly to rbenv or pyenv.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Prerequisites
 
@@ -118,8 +112,6 @@ Clone the repo with submodules to pull in the PaperMod theme:
 git clone --recurse-submodules https://github.com/mfrazier/opscode-blog.git
 ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ### Configuration
 
 **Hugo**
@@ -134,8 +126,6 @@ git clone --recurse-submodules https://github.com/mfrazier/opscode-blog.git
 - Remote state is stored in S3 with DynamoDB locking — the state bucket must be
   bootstrapped once before running `terraform init`
 - `tf/.terraform-version` is read automatically by tfenv
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
 
@@ -187,15 +177,11 @@ Required GitHub Actions secrets:
 | `S3_BUCKET` | `opscode.io` |
 | `CLOUDFRONT_DISTRIBUTION_ID` | `terraform output cloudfront_distribution_id` |
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ---
 
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 [contributors-shield]: https://img.shields.io/github/contributors/mfrazier/opscode-blog.svg?style=for-the-badge
