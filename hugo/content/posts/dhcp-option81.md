@@ -25,9 +25,9 @@ The Windows DHCP servers in our environment use Option 81 (the Client FQDN optio
 fully-qualified domain name, the DHCP server takes that as the authoritative
 hostname and registers a DNS A record for it. When Option 81 is absent, the server
 falls back to Option 12 (the plain Hostname option). Windows DHCP servers can be
-configured to perform dynamic DNS updates using Option 12, but this is a per-scope
-setting and cannot be enforced globally, making Option 81 the reliable path for
-consistent DNS registration across all scopes.
+configured to perform dynamic DNS updates using Option 12,
+but in our environment this is configured per-scope rather than globally, making
+Option 81 the more reliable path for consistent DNS registration across all scopes.
 
 The Ubuntu servers are managed by systemd-networkd. Some were sending Option 81 and
 getting proper DNS entries. Others were sending only Option 12 with a short hostname
@@ -94,7 +94,7 @@ Option 81. Correct DNS wire format. Flags `[SE]` = 0x05. Option 12 absent.
 
 No configuration required. Just an FQDN as the kernel UTS hostname.
 
-I ran it again to make sure. Same result. The man page says dots are forbidden.
+I ran it again to make sure. Same result.
 The code sends a correctly encoded Option 81.
 
 The `^K`, `^D`, `^G`, `^C` control characters in the tcpdump output are
@@ -115,10 +115,8 @@ FQDN (81), length 29: [SE] "lnx-app-01.corp.example.com"
 Two Option 81 instances in the same packet. The first is from the native code in
 DNS wire format; the second is from `SendOption=` in plain ASCII with a flag byte
 claiming DNS wire format encoding, which is a flag/encoding mismatch.
-[RFC 4702](https://www.rfc-editor.org/rfc/rfc4702) does not define server behavior
+[RFC 4702](https://www.rfc-editor.org/rfc/rfc4702) does not define behavior
 for duplicate Option 81, and systemd-networkd produces no warning.
-
-This validated exactly the concern that prompted the deeper investigation.
 
 ---
 
@@ -157,9 +155,9 @@ When the hostname is a single-label name, Option 12 is sent. When it is a multi-
 name, `client_append_fqdn_option()` is called and Option 81 is sent in DNS wire format
 with flags 0x05. The `hostname_is_valid()` function used to validate the configured
 hostname accepts multi-label names at this point in the logic. The "no dots"
-prohibition in the man page is not enforced anywhere in the code.
+prohibition in the man page is ambiguous and misleading.
 
-The reason most Ubuntu servers never reach the FQDN branch is straightforward:
+The reason the affected Ubuntu servers never reach the FQDN branch is straightforward:
 `dhcp4_set_hostname()` reads the kernel UTS hostname via `gethostname_strict()`, which
 calls `uname()` rather than performing DNS resolution. The FQDN returned by `hostname -f`
 is a runtime DNS lookup artifact and is never consulted during DHCP packet construction.
@@ -186,7 +184,7 @@ handshakes.
 | 3b | Single-label | netplan single-label override | Yes | No | - |
 | 4 | Single-label | `SendOption=` `\x05` | Yes | Yes `[SE]` | ASCII, flag mismatch |
 | 5 | Single-label | `SendOption=` `\x01` | Yes | Yes `[S]` | ASCII |
-| 6 | FQDN | `SendOption=` drop-in | No | Yes x2 | Wire format + ASCII mismatch |
+| 6 | FQDN | `SendOption=` drop-in | No | Yes x2 | Wire format + ASCII (mismatch) |
 | 7 | Single-label | `Hostname=` FQDN in drop-in | No | Yes `[SE]` | Wire format |
 
 Tests 2, 3a, and 7 produced identical output. All three invoke the same
