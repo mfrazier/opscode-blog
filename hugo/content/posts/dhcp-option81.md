@@ -2,6 +2,7 @@
 title: "DHCP Option 81 in systemd-networkd: The Undocumented Behavior"
 date: 2026-03-08
 draft: false
+ShowToc: true
 tags: ["linux", "networking", "dhcp", "systemd", "ubuntu", "sysadmin"]
 description: "I inherited a set of Ubuntu servers with inconsistent Dynamic DNS updates and ended up submitting a fix to the systemd man page."
 ---

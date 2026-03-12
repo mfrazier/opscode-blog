@@ -4,7 +4,8 @@ date: 2026-03-04T00:00:00-08:00
 draft: false
 tags: ["hugo", "aws", "terraform", "github-actions", "cloudfront", "s3", "devops"]
 description: "The infrastructure behind opscode.io - Hugo, S3, CloudFront, Route 53, and a GitHub Actions pipeline that deploys on every git push."
-showToc: true
+ShowToc: true
+TocOpen: true
 ShowCodeCopyButtons: true
 ---
 
