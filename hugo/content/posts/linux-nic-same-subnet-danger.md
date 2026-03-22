@@ -3,7 +3,6 @@ title: "A Tale of Two Network Interfaces"
 date: 2026-03-15
 draft: false
 tags:
-  - cmmc
   - linux
   - networking
   - sysadmin
