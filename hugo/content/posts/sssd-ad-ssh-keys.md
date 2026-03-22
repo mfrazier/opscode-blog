@@ -61,7 +61,7 @@ ldap_user_ssh_public_key = <ad attribute>
 
 ---
 
-## Finding 1 - disabled AD accounts can SSH into systems
+## Finding 1: Disabled AD accounts can SSH into systems
 
 The first issue came up during initial testing. A test account was disabled in Active Directory, then SSH was attempted to a jump server with that account's key.
 
@@ -82,7 +82,7 @@ userAccountControl: 514
 
 ### Why
 
-`access_provider = simple` evaluates exactly one thing: whether the user is a member of the groups listed in `simple_allow_groups`. It has no awareness of AD account lifecycle state. Disabled, locked, expired - none of those conditions are checked. If the account is in the allowed group, `simple` returns success.
+`access_provider = simple` evaluates exactly one thing: whether the user is a member of the groups listed in `simple_allow_groups`. Disabled and locked account states are never checked. If the account is in the allowed group, `simple` returns success.
 
 The SSSD backend logs confirmed this. SSSD read and stored `adUserAccountControl [514]` during the user object fetch:
 
@@ -94,7 +94,7 @@ And then did nothing with it. The access check that ran was `sdap_account_expire
 
 ---
 
-## Finding 2 - revoked SSH keys stay valid for up to 90 minutes
+## Finding 2: Revoked SSH keys stay valid for up to 90 minutes
 
 SSSD's default `entry_cache_timeout` is `5400` seconds - 90 minutes. User objects, including their cached SSH public keys, are served from SSSD's local LDB database until that TTL expires.
 
