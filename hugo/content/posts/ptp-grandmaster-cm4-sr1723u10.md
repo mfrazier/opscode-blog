@@ -448,6 +448,23 @@ The grandmaster PHC is within 7 nanoseconds of GPS truth on average. That is the
 
 The CM4 client system clock is within 3-10 nanoseconds of GPS truth. That is the time it takes light to travel across a small room.
 
+
+## The Build
+
+The finished grandmaster fits in a Waveshare CM4-IO-BOARD-CASE-A aluminum enclosure. The SMA antenna connector exits through the top panel. Five Dupont wires connect the SR1723U10 GPS module to the 40-pin header and J2 header inside.
+
+![Case lid removed showing the IO board, wiring, and fan](/images/ptp-hardware-overview.jpg)
+
+The case lid holds the fan and has a cutout for the SMA bulkhead connector. The Dupont wires run from the GPS module on the board up through the case to the J2 header.
+
+![CM4 IO Board close-up: GPS wiring, heatsink, RTC battery, and all connectors labeled](/images/ptp-hardware-internals.jpg)
+
+The GPS module sits near the 40-pin header on the upper left. The green wire carrying the PPS signal runs to the J2 header near the Ethernet jack. The PCF85063A RTC battery holder is visible on the lower left with a CR2032 installed.
+
+![Assembled grandmaster: Waveshare CM4-IO-BOARD-CASE-A with GPS SMA connector on top](/images/ptp-hardware-exterior.jpg)
+
+The SMA bulkhead on the top panel connects to the Bingfu active GPS antenna via a JEFA Tech U.FL to SMA pigtail routed internally. The enclosure measures 160mm x 100mm x 40mm.
+
 ## References
 
 - [jclark/rpi-cm4-ptp-guide](https://github.com/jclark/rpi-cm4-ptp-guide), the guide this build is based on
