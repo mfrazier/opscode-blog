@@ -1,11 +1,11 @@
 ---
-title: "Stratum 1 PTP Grandmaster: CM4 + SR1723U10"
+title: "Stratum 1 PTP Grandmaster: CM4 + SR1723U10 (Part 1)"
 date: 2026-04-07
-description: "I wanted to experiment with PTP in my homelab. Instead of spending money on purpose-built hardware, I decided to start with what was already on the shelf."
+description: "Building a GPS-disciplined PTP grandmaster from a Raspberry Pi CM4 and SR1723U10 GPS module. Part 1 of the homelab PTP series."
 tags: ["ptp", "ntp", "linux", "networking", "raspberry-pi"]
 author: "Malcolm Frazier"
 showToc: true
-TocOpen: true
+TocOpen: false
 draft: false
 ---
 
