@@ -23,7 +23,7 @@ The R5S has no standard GPIO header. It has an FPC connector. Getting a GPS modu
 | uxcell 12-pin 0.5mm FPC ribbon cable (5-pack) | $6.89 |
 | **Total** | **$150.95** |
 
-OS: `rk3568-sd-ubuntu-noble-core-6.1-arm64-20260319.img.gz`. Kernel 6.1.
+OS: `rk3568-sd-ubuntu-noble-core-6.1-arm64-20260319.img.gz`.
 
 The R5S has three Ethernet ports. eth0 is the onboard RK3568 GMAC with hardware PTP timestamping. eth1 and eth2 are RTL8125BG 2.5G NICs via PCIe with no reliable hardware timestamping. eth0 is the only interface that matters for this build.
 
@@ -394,7 +394,7 @@ Both builds produce a working stratum 1 PTP grandmaster at sub-microsecond clien
 
 The CM4 build uses SatPulse, which handles GPS configuration, PHC discipline, and chrony integration in a single daemon. It is significantly easier to configure, and everything fits cleanly inside the enclosure. The R5S build requires manually wiring together gpsd, chrony, ptp4l, phc2sys, and pmc, with several non-obvious gotchas along the way. The GPS module and breakout board sit outside the case.
 
-The R5S also gives you three Ethernet ports and a capable Linux router out of the box. If you want a grandmaster and a router in one device, the R5S is the better fit.
+The R5S also gives you three Ethernet ports and a capable Linux router. If you want a grandmaster and a router in one device, the R5S is the better fit.
 
 The holdover results were not expected:
 
@@ -406,8 +406,6 @@ The holdover results were not expected:
 The R5S crystal held 270x tighter over a longer test period. Whether this reflects a better crystal in the RK3568 SoC or operating temperature differences during the test is unclear. Either way, 82.6µs of drift over nearly 15 hours from an uncompensated crystal is a strong result.
 
 For client accuracy, both grandmasters produce the same results on the same clients. The grandmaster accuracy floor is well below what the clients can measure.
-
-If you have a CM4 available and just want a grandmaster, use that build. SatPulse makes it dramatically simpler.
 
 ## References
 

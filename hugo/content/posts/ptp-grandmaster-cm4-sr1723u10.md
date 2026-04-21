@@ -470,3 +470,4 @@ The SMA bulkhead on the top panel connects to the Bingfu active GPS antenna via 
 - [jclark/rpi-cm4-ptp-guide](https://github.com/jclark/rpi-cm4-ptp-guide), the guide this build is based on
 - [SatPulse](https://satpulse.net), the daemon that makes this work
 - [SatPulse switch recommendations](https://satpulse.net/hardware/switches.html), FS IES3110 details
+- [Part 2: Stratum 1 PTP Grandmaster: NanoPi R5S-LTS + NEO-M8N (Part 2)](/posts/ptp-grandmaster-r5s-nanopi/)
