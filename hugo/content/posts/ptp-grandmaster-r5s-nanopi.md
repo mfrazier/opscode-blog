@@ -392,9 +392,9 @@ Same Prometheus and Grafana stack as Part 1. `node_exporter` and `chrony_exporte
 
 Both builds produce a working stratum 1 PTP grandmaster at sub-microsecond client accuracy. The differences are in software complexity, physical form factor, and holdover performance.
 
-The CM4 build uses SatPulse, which handles GPS configuration, PHC discipline, and chrony integration in a single daemon. It is significantly easier to configure, and everything fits cleanly inside the enclosure. The R5S build requires manually wiring together gpsd, chrony, ptp4l, phc2sys, and pmc, with several non-obvious gotchas along the way. The GPS module and breakout board sit outside the case.
+The CM4 build uses SatPulse, which handles GPS configuration, PHC discipline, and chrony integration in a single daemon. It is significantly easier to configure, and everything fits cleanly inside the enclosure. The R5S build requires manually wiring together gpsd, chrony, ptp4l, phc2sys, and pmc, and adds meaningful configuration complexity. The GPS module and breakout board sit outside the case.
 
-The R5S also gives you three Ethernet ports and a capable Linux router. If you want a grandmaster and a router in one device, the R5S is the better fit.
+The R5S has three Ethernet ports, and with the right image it can serve as a router as well, making it a flexible platform if you want more than just a grandmaster.
 
 The holdover results were not expected:
 
@@ -405,7 +405,18 @@ The holdover results were not expected:
 
 The R5S crystal held 270x tighter over a longer test period. Whether this reflects a better crystal in the RK3568 SoC or operating temperature differences during the test is unclear. Either way, 82.6µs of drift over nearly 15 hours from an uncompensated crystal is a strong result.
 
-For client accuracy, both grandmasters produce the same results on the same clients. The grandmaster accuracy floor is well below what the clients can measure.
+What matters most is what clients actually see:
+
+| Client | CM4 grandmaster | R5S grandmaster |
+|--------|----------------|-----------------|
+| RK1 (Rockchip GMAC) | ±291ns | ±291ns |
+| CM4 (BCM54210PE) | ±66ns | ±84ns |
+
+Identical on RK1. The CM4 client is marginally tighter against the CM4 grandmaster, but the difference is small enough that it could be test conditions rather than a meaningful hardware gap. Both grandmasters deliver the same practical accuracy.
+
+For cost perspective\*: a single TimeHAT build requires the TimeHAT ($200), an OCP M.2 GNSS module ($195), and a Pi 5 4GB ($110), totaling $505. Both builds documented in this series cost me $254 in new parts, exactly half the price of a single TimeHAT grandmaster, and deliver comparable client accuracy. The TimeHAT's TCXO will hold time more accurately during GPS outages, which matters in production environments. In a homelab this is a non-issue, and having two grandmasters opens up BMCA priority failover testing.
+
+\* Prices at time of writing.
 
 ## References
 
