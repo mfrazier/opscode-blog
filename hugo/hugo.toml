@@ -25,6 +25,10 @@ paginate = 10
     name = "github"
     url  = "https://github.com/mfrazier"
 
+  [[params.socialIcons]]
+    name = "linkedin"
+    url  = "https://www.linkedin.com/in/malcolm-frazier-7378a574/"
+
 [menu]
   [[menu.main]]
     identifier = "posts"
