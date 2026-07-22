@@ -40,9 +40,8 @@ One machine timestamps both ends.
 
 The catch is that Linux will not put that packet on the wire. Route lookups
 consult the routing policy database in priority order, and the priority-0 rule
-points at the [`local` table](https://man7.org/linux/man-pages/man8/ip-rule.8.html),
-a special table holding a `local` route for every address configured on the
-machine. Ping one of your own interfaces from another and the lookup matches
+points at the [local table](https://man7.org/linux/man-pages/man8/ip-rule.8.html),
+a special table holding a route for every address configured on the machine. Ping one of your own interfaces from another and the lookup matches
 there first, so the kernel delivers the packet internally over loopback. The
 physical interfaces are never consulted. This is by design: Linux uses the
 [weak host model](https://en.wikipedia.org/wiki/Host_model), in which an IP
@@ -278,13 +277,15 @@ measurement here was affected.
   with one mechanism instead of six, and they fail closed: a broken setup stops
   traffic instead of silently measuring loopback.
 - **Use hardware timestamps when the effect is under ~100 µs.** The kernel path
-  adds about 450 µs of its own latency and +/-30 µs of jitter, enough to rank
-  two DUTs differing by 19 times in the wrong order.
-- **Keep coordination and clock-sync traffic off the DUT under load**, or the
-  load corrupts the measurement infrastructure itself.
+  adds about 450 µs of its own latency and +/-30 µs of jitter. That is so much
+  larger than the DUTs themselves that ping and sockperf ranked the faster and
+  slower devices in the wrong order.
+- **Route the test setup's control and clock-sync traffic around the loaded
+  DUT.** When they shared the congested wire, the load corrupted the
+  measurement itself.
 - **Lower latency does not mean better.** The repeater has the lowest latency of
   the three at 480 ns, but it only repeats bits. It does not switch, filter, or
-  run full duplex. Store-and-forward costs latency and buys the functions that
-  replaced hubs.
+  run full duplex. A switch spends latency to do those things, which is why
+  switches replaced hubs.
 - **Check EEE.** One default setting raised a gigabit switch's path delay from
   3.08 µs to 26 µs.
