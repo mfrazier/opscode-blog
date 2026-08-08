@@ -31,11 +31,11 @@ resource "aws_route53_record" "cert_validation" {
       record = dvo.resource_record_value
     }
   }
-  zone_id = data.aws_route53_zone.zone.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 60
+  zone_id         = data.aws_route53_zone.zone.zone_id
+  name            = each.value.name
+  type            = each.value.type
+  records         = [each.value.record]
+  ttl             = 60
   allow_overwrite = true
 }
 
@@ -73,24 +73,43 @@ resource "aws_cloudfront_origin_access_control" "oac" {
   signing_protocol                  = "sigv4"
 }
 
-# ── CloudFront Function: Hugo clean URL rewriting ────────────────────────────
-# Hugo outputs /posts/hello/index.html; users request /posts/hello/
-# Without this function S3 returns 403. runtime cloudfront-js-2.0 is valid.
+# ── CloudFront Function: canonical host redirect + Hugo clean URL rewriting ──
+# 1. 301 redirects www -> apex so search engines index a single hostname.
+#    Both names alias the same distribution, so without this they serve
+#    byte-identical content and split crawl budget / backlink authority.
+# 2. Hugo outputs /posts/hello/index.html; users request /posts/hello/
+#    Without the rewrite S3 returns 403.
+#    The dot check inspects only the LAST path segment — checking the whole
+#    URI would skip the rewrite on paths like /posts/systemd-v257.2-notes
+#    while still leaving /sitemap.xml and /robots.txt untouched.
+# runtime cloudfront-js-2.0 is valid.
 
 resource "aws_cloudfront_function" "url_rewrite" {
   name    = "${replace(var.domain_name, ".", "-")}-url-rewrite"
   runtime = "cloudfront-js-2.0"
-  comment = "Append index.html to Hugo clean URLs"
+  comment = "Canonical host redirect + append index.html to Hugo clean URLs"
   publish = true
   code    = <<-EOT
     function handler(event) {
       var request = event.request;
       var uri = request.uri;
+      var host = request.headers.host.value;
+
+      if (host === '${var.www_domain_name}') {
+        return {
+          statusCode: 301,
+          statusDescription: 'Moved Permanently',
+          headers: { location: { value: 'https://${var.domain_name}' + uri } }
+        };
+      }
+
+      var last = uri.split('/').pop();
       if (uri.endsWith('/')) {
         request.uri += 'index.html';
-      } else if (!uri.includes('.')) {
+      } else if (last.indexOf('.') === -1) {
         request.uri += '/index.html';
       }
+
       return request;
     }
   EOT
@@ -132,9 +151,22 @@ resource "aws_cloudfront_distribution" "site" {
   }
 
   custom_error_response {
-    error_code         = 404
-    response_code      = 404
-    response_page_path = "/404.html"
+    error_code            = 404
+    response_code         = 404
+    response_page_path    = "/404.html"
+    error_caching_min_ttl = 60
+  }
+
+  # The bucket policy grants CloudFront s3:GetObject only (no s3:ListBucket),
+  # so S3 returns 403 Access Denied for missing keys rather than 404.
+  # Without this mapping, missing pages surface as 403 — which Googlebot
+  # reads as "blocked" rather than "not found". Adding ListBucket instead
+  # would fix the status code but leak a full object listing.
+  custom_error_response {
+    error_code            = 403
+    response_code         = 404
+    response_page_path    = "/404.html"
+    error_caching_min_ttl = 60
   }
 
   restrictions {
@@ -156,9 +188,9 @@ resource "aws_cloudfront_distribution" "site" {
 
 data "aws_iam_policy_document" "s3_policy" {
   statement {
-    sid     = "AllowCloudFrontOAC"
-    effect  = "Allow"
-    actions = ["s3:GetObject"]
+    sid       = "AllowCloudFrontOAC"
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.site.arn}/*"]
     principals {
       type        = "Service"
@@ -253,8 +285,8 @@ resource "aws_iam_role" "github_actions" {
 
 data "aws_iam_policy_document" "deploy_perms" {
   statement {
-    effect  = "Allow"
-    actions = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
     resources = [aws_s3_bucket.site.arn, "${aws_s3_bucket.site.arn}/*"]
   }
   statement {
