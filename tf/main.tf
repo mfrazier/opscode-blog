@@ -73,41 +73,80 @@ resource "aws_cloudfront_origin_access_control" "oac" {
   signing_protocol                  = "sigv4"
 }
 
-# ── CloudFront Function: canonical host redirect + Hugo clean URL rewriting ──
+# ── CloudFront Function: canonical URL redirects + Hugo clean URL rewriting ──
 # 1. 301 redirects www -> apex so search engines index a single hostname.
 #    Both names alias the same distribution, so without this they serve
 #    byte-identical content and split crawl budget / backlink authority.
-# 2. Hugo outputs /posts/hello/index.html; users request /posts/hello/
-#    Without the rewrite S3 returns 403.
-#    The dot check inspects only the LAST path segment — checking the whole
-#    URI would skip the rewrite on paths like /posts/systemd-v257.2-notes
-#    while still leaving /sitemap.xml and /robots.txt untouched.
+# 2. 301 redirects extensionless paths without a trailing slash to the slashed
+#    form. Rewriting them to index.html served 200 instead, so every page was
+#    reachable at two URLs and every crawler walked the site twice.
+# 3. Host and slash fixes are resolved into a SINGLE 301, not a chain.
+# 4. Query strings are rebuilt from request.querystring and carried through the
+#    redirect. request.uri never contains them, so a bare uri redirect silently
+#    strips every ?utm_source= on inbound links.
+# 5. File detection uses an extension allowlist, not "the last segment contains
+#    a dot". A dot check treats /posts/ubuntu-24.04 as a file and 404s it, while
+#    an allowlist leaves /sitemap.xml and /robots.txt untouched.
 # runtime cloudfront-js-2.0 is valid.
 
 resource "aws_cloudfront_function" "url_rewrite" {
   name    = "${replace(var.domain_name, ".", "-")}-url-rewrite"
   runtime = "cloudfront-js-2.0"
-  comment = "Canonical host redirect + append index.html to Hugo clean URLs"
+  comment = "Canonical host + trailing slash 301, then Hugo clean URL rewrite"
   publish = true
   code    = <<-EOT
+    var KNOWN_EXT = ['html','xml','txt','json','css','js','map','png','jpg',
+                     'jpeg','gif','svg','webp','avif','ico','woff','woff2',
+                     'ttf','pdf','webmanifest','zip','gz','atom','rss'];
+
+    function queryString(request) {
+      var parts = [];
+      for (var k in request.querystring) {
+        var v = request.querystring[k];
+        if (v.multiValue) {
+          for (var i = 0; i < v.multiValue.length; i++) {
+            parts.push(k + '=' + v.multiValue[i].value);
+          }
+        } else if (v.value === '') {
+          parts.push(k);
+        } else {
+          parts.push(k + '=' + v.value);
+        }
+      }
+      return parts.length ? '?' + parts.join('&') : '';
+    }
+
+    function redirect(location) {
+      return {
+        statusCode: 301,
+        statusDescription: 'Moved Permanently',
+        headers: {
+          'location':      { value: location },
+          'cache-control': { value: 'max-age=3600' }
+        }
+      };
+    }
+
     function handler(event) {
       var request = event.request;
-      var uri = request.uri;
-      var host = request.headers.host.value;
+      var uri     = request.uri;
+      var host    = request.headers.host.value;
 
-      if (host === '${var.www_domain_name}') {
-        return {
-          statusCode: 301,
-          statusDescription: 'Moved Permanently',
-          headers: { location: { value: 'https://${var.domain_name}' + uri } }
-        };
+      var last   = uri.split('/').pop();
+      var dot    = last.lastIndexOf('.');
+      var isFile = dot > -1 &&
+                   KNOWN_EXT.indexOf(last.slice(dot + 1).toLowerCase()) > -1;
+
+      var canonicalUri = (!isFile && !uri.endsWith('/')) ? uri + '/' : uri;
+
+      if (host === '${var.www_domain_name}' || canonicalUri !== uri) {
+        return redirect(
+          'https://${var.domain_name}' + canonicalUri + queryString(request)
+        );
       }
 
-      var last = uri.split('/').pop();
-      if (uri.endsWith('/')) {
-        request.uri += 'index.html';
-      } else if (last.indexOf('.') === -1) {
-        request.uri += '/index.html';
+      if (canonicalUri.endsWith('/')) {
+        request.uri = canonicalUri + 'index.html';
       }
 
       return request;

@@ -38,19 +38,22 @@ jobs:
       - name: Sync static assets (1-year cache)
         run: |
           aws s3 sync hugo/public/ s3://${{ secrets.S3_BUCKET }}/ \
-            --delete \
             --cache-control "max-age=31536000,public" \
             --exclude "*.html" \
             --exclude "*.xml" \
-            --exclude "*.json"
+            --exclude "*.json" \
+            --exclude "*.txt"
 
-      - name: Sync HTML/XML/JSON (5-min cache)
+      - name: Sync HTML/XML/JSON/TXT (5-min cache) and prune deletions
         run: |
           aws s3 sync hugo/public/ s3://${{ secrets.S3_BUCKET }}/ \
+            --delete \
             --cache-control "max-age=300,public" \
+            --exclude "*" \
             --include "*.html" \
             --include "*.xml" \
-            --include "*.json"
+            --include "*.json" \
+            --include "*.txt"
 
       - name: Invalidate CloudFront cache
         run: |

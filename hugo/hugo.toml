@@ -1,12 +1,14 @@
 baseURL = 'https://opscode.io/'
 enableRobotsTXT = true
 languageCode = 'en-us'
-title = 'Opscode'
+title = 'Opscode — Linux & Infrastructure Engineering'
 theme = 'PaperMod'
+
+[taxonomies]
+  tag = "tags"
 
 [params]
   env = "production"
-  title = "opscode"
   description = "Systems engineer writing about Linux, DevOps, automation, security, and infrastructure."
   images = ["/og-default.png"]
   author = "Malcolm Frazier"
@@ -16,16 +18,17 @@ theme = 'PaperMod'
   ShowPostNavLinks = true
   ShowBreadCrumbs = true
   ShowRssButtonInSectionTermList = true
+  ShowToc = true
+  TocOpen = false
   UseHugoToc = true
-
+  [params.label]
+    text = "Opscode"
   [params.homeInfoParams]
     Title = "Hi, I'm Malcolm"
     Content = "Systems engineer writing about Linux, DevOps, automation, security, and infrastructure."
-
   [[params.socialIcons]]
     name = "github"
     url  = "https://github.com/mfrazier"
-
   [[params.socialIcons]]
     name = "linkedin"
     url  = "https://www.linkedin.com/in/malcolm-frazier-7378a574/"
@@ -44,7 +47,6 @@ theme = 'PaperMod'
 
 [markup.goldmark.renderer]
   unsafe = true
-
 [markup.highlight]
   noClasses = false
 
