@@ -1,7 +1,7 @@
 baseURL = 'https://opscode.io/'
 enableRobotsTXT = true
 languageCode = 'en-us'
-title = 'Opscode — Linux & Infrastructure Engineering'
+title = 'Opscode - Linux & Infrastructure Engineering'
 theme = 'PaperMod'
 
 [taxonomies]
