@@ -26,6 +26,8 @@ I first ran this audit a few years ago against a large Linux infrastructure runn
 
 This post walks the whole chain: reading another user's files, writing as them, spawning a shell as them, escalating to root, and then covering how to mitigate it.
 
+One precondition, since it frames everything below. Linux exports are [`secure`](https://man7.org/linux/man-pages/man5/exports.5.html) by default: the server only accepts requests from source ports under 1024, which requires root on the client. So the attacker isn't an unprivileged local user. It's root on a client already in the export's allow-list, where `AUTH_SYS` turns that root into any UID on the server, across every host the target's home is mounted on. Local root on one client becomes a real identity across the fleet. (An `insecure` export drops the root requirement entirely. The threat model below assumes the `secure` default; the lab sets `insecure` only to keep the commands focused on identity spoofing, and flags where client-side root is otherwise required.)
+
 ---
 
 ## How NFSv3 Authenticates
@@ -38,7 +40,7 @@ There is no password, no ticket, no challenge, and no key. The only thing standi
 
 Two facts remove even that:
 
-1. A userspace NFS client needs no kernel mount, so it needs no root, and nothing forces it to send a real UID. It builds the credential by hand.
+1. A userspace NFS client needs no kernel mount and nothing forces it to send a real UID. It builds the credential by hand. Under the default `secure` export it must still originate from a privileged port, so it needs root on the client, but that's the only barrier.
 2. `root_squash`, the one protection most admins can name, only squashes the root account (UID 0). It does nothing to UID 2000, or to any other non-root UID.
 
 Put those together and any user who can reach the NFS server can read and write files as any non-root UID on the export. On a plain data share that is bad enough. When the export holds home directories, reading and writing as a UID becomes *being* that user, on every host that mounts it.
@@ -61,7 +63,7 @@ bob:x:2000:2000::/export/home/bob:/bin/bash
 mallory:x:2001:2001::/export/home/mallory:/bin/bash
 ```
 
-`mallory` is the attacker: a plain, unprivileged user, with no sudo and nothing special.
+`mallory` is the attacker. The UID she forges is unprivileged, but running a userspace client against a `secure` export needs root on this client to bind a privileged port. This lab exports `insecure` so the commands stay focused on the spoofing itself; against a default export, prefix the client side with root.
 
 ```
 mallory@target:~$ id
