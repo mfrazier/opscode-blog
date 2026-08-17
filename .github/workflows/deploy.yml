@@ -27,7 +27,9 @@ jobs:
 
       - name: Build
         working-directory: hugo
-        run: hugo --minify
+        run: |
+          hugo --minify --cleanDestinationDir
+          find public -path '*/page/1/index.html' -delete
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v5
